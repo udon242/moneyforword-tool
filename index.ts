@@ -50,6 +50,29 @@ const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD;
         console.log(`今月の支出: ${monthlyTotalList[2]}`);
         console.log(`今月の収支: ${monthlyTotalList[4]}`);
 
+        /*
+         * 収支内訳をスクレイピング 
+         */
+        await page.goto(`${MF_URL}/cf/summary`, {
+            waitUntil: 'networkidle2',
+        });
+
+        const clip = await page.evaluate(s => {
+            const nodeList = document.querySelectorAll('section#cache-flow');
+            const { width, height, top: y, left: x } = nodeList[0].getBoundingClientRect();
+            return { width, height, x, y }
+        });
+        const yPosition = (29 + 15) + (54 + 9);
+        await page.screenshot({
+            clip: {
+                ...clip,
+                y: clip.y + yPosition,
+                height: clip.height - yPosition,
+                width: clip.width - 70,
+            },
+            path: 'screenshot/cf_summary.png',
+        });
+
         // ブラウザを閉じる
         await browser.close();
     } catch (error) {
