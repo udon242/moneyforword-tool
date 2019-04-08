@@ -27,6 +27,7 @@ export default class MoneyForwordScraping {
             // Email, Passwordを入力(環境変数から取得)
             await page.type('input[id="sign_in_session_service_email"]', process.env.LOGIN_EMAIL);
             await page.type('input[id="sign_in_session_service_password"]', process.env.LOGIN_PASSWORD);
+            await page.screenshot({path: 'screenshot/image1.jpg'});
     
             // ログインボタンをクリック
             await page.click('input[id="login-btn-sumit"]');
