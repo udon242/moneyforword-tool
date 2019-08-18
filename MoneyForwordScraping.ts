@@ -14,12 +14,21 @@ export default class MoneyForwordScraping {
      */
     async getMonthlyTotal(): Promise<MonthlyTotal> {
         const data: MonthlyTotal = {};
+
+        // ブラウザを立ち上げる
+        const browser = await puppeteer.launch({
+            args: ['--no-sandbox'] // Cloud Functionsで動かす場合には'--no-sandbox'が必須
+        });
+
         try {
-            // MoneyForwordへアクセス
-            const browser = await puppeteer.launch({
-                args: ['--no-sandbox'] // Cloud Functionsで動かす場合には'--no-sandbox'が必須
-            });
+            // 新規ページを開く
             const page = await browser.newPage();
+
+            // デバイス指定
+            const devices = require('puppeteer/DeviceDescriptors');
+            await page.emulate(devices['iPad Pro landscape']);
+
+            // MoneyForwordへアクセス
             await page.goto(`${MF_URL}/users/sign_in`, {
                 waitUntil: 'networkidle2', // 画像, JSの読み込み後まで待つ
             });
@@ -27,18 +36,17 @@ export default class MoneyForwordScraping {
             // Email, Passwordを入力(環境変数から取得)
             await page.type('input[id="sign_in_session_service_email"]', process.env.LOGIN_EMAIL);
             await page.type('input[id="sign_in_session_service_password"]', process.env.LOGIN_PASSWORD);
-            await page.screenshot({path: 'screenshot/image1.jpg'});
+            await page.screenshot({path: 'screenshot/01_login.jpg'});
     
             // ログインボタンをクリック
             await page.click('input[id="login-btn-sumit"]');
-    
-            // ページ遷移を待つ
-            await page.waitForNavigation();
+            await page.screenshot({path: 'screenshot/02_after_login.jpg'});
     
             // 家計ページへ遷移
             await page.goto(`${MF_URL}/cf`, {
                 waitUntil: 'networkidle2',
             });
+            await page.screenshot({path: 'screenshot/03_cf_page.jpg'});
     
             // ページ要素を抜き出す
             const monthlyTotalList = await page.evaluate(() => {
@@ -63,6 +71,7 @@ export default class MoneyForwordScraping {
         } catch (error) {
             // とりあえずエラーログ
             console.error(error);
+            await browser.close();
         }
         return data;
     }
